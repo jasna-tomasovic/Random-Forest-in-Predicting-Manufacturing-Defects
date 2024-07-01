@@ -1,0 +1,47 @@
+# Manufacturing Defects Dataset from Kaggle
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+
+defects = pd.read_csv(''/kaggle/input/predicting-manufacturing-defects-dataset/manufacturing_defect_dataset.csv')
+
+defects['DefectStatus'].value_counts()
+# 1    2723
+# 0     517
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from imblearn.over_sampling import SMOTE
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
+
+X = defects.drop('DefectStatus', axis=1)
+y = defects['DefectStatus']
+
+# Handle imbalanced data
+smote = SMOTE(random_state=42)
+X_res, y_res = smote.fit_resample(X, y)
+
+X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size=0.2, random_state=42)
+
+# Scale features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Train model
+model = RandomForestClassifier(random_state=42)
+model.fit(X_train, y_train)
+
+# Predict
+y_pred = model.predict(X_test)
+
+# Evaluate
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+print("ROC-AUC Score:", roc_auc_score(y_test, y_pred))
+
+# ROC-AUC Score: 0.9401608333417557
